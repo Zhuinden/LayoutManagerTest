@@ -24,23 +24,6 @@ public class TestLayoutManager
         this.visiblePositions = new ArrayList<>();
     }
 
-    protected class LayoutState {
-        public int rowCount;
-        public int columnCount;
-        public int currentRowAccumulatedWidth;
-        public int remainingScreenWidth;
-        public int remainingScreenHeight;
-        public int currentRowAccumulatedHeight;
-
-        public void reset() {
-            this.rowCount = 0;
-            this.currentRowAccumulatedWidth = 0;
-            this.currentRowAccumulatedHeight = 0;
-            this.remainingScreenWidth = getWidth();
-            this.remainingScreenHeight = getHeight();
-        }
-    }
-
     protected class AnchorInfo {
         public int currentScrolledX = 0;
         public int currentScrolledY = 0;
@@ -81,17 +64,9 @@ public class TestLayoutManager
         ensureAnchorInfo();
         RowSpecifierAdapter.MetadataHolder current = rowSpecifierAdapter.getMetadataHolderForPosition(position);
         int accumulatedWidth = current.getAccumulatedWidth();
-        if(ScreenUtils.dpToPx(accumulatedWidth) >= anchorInfo.currentScrolledX && ScreenUtils.dpToPx(accumulatedWidth) < (anchorInfo.currentScrolledX + getWidth())) { //is inside rectangle
+        if((ScreenUtils.dpToPx(accumulatedWidth+current.getWidth()) > anchorInfo.currentScrolledX) || (ScreenUtils.dpToPx(accumulatedWidth) >= anchorInfo.currentScrolledX && ScreenUtils.dpToPx(accumulatedWidth) < (anchorInfo.currentScrolledX + getWidth()))) { //is inside rectangle
             return true;
         }
-//        if(ScreenUtils.dpToPx(accumulatedWidth + current.getWidth()) > anchorInfo.currentScrolledX || ScreenUtils.dpToPx(accumulatedWidth + current
-//                .getWidth()) + getWidth() < (anchorInfo.currentScrolledX + getWidth())) { //is partly visible horizontally
-//            return true;
-//        }
-//        if(ScreenUtils.dpToPx(current.getAccumulatedHeight() + current.getHeight()) > anchorInfo.currentScrolledY || ScreenUtils.dpToPx(
-//                current.getAccumulatedHeight() + current.getHeight()) + getHeight() < (anchorInfo.currentScrolledY + getHeight())) { //is partly visible vertically
-//            return true;
-//        }
         return false;
     }
 
@@ -108,7 +83,7 @@ public class TestLayoutManager
         }
 
         initializeVisiblePositions(state);
-        //for(int i = 0; i < state.getItemCount(); i++) {
+
         for(Integer i : visiblePositions) {
             View view = viewCache.get(i);
             if(view == null) {
@@ -122,7 +97,6 @@ public class TestLayoutManager
                         ScreenUtils.dpToPx(metadataHolder.getAccumulatedHeight()) - anchorInfo.currentScrolledY,
                         ScreenUtils.dpToPx(metadataHolder.getAccumulatedWidth()+metadataHolder.getWidth()) - anchorInfo.currentScrolledX,
                         ScreenUtils.dpToPx(metadataHolder.getAccumulatedHeight()+metadataHolder.getHeight()) - anchorInfo.currentScrolledY); //assuming uniform height per row
-                //layoutState.columnCount++;
             } else {
                 attachView(view);
                 viewCache.remove(i);
@@ -141,6 +115,9 @@ public class TestLayoutManager
 
     @Override
     public void scrollToPosition(int position) {
+        ensureAnchorInfo();
+        anchorInfo.currentScrolledX = rowSpecifierAdapter.getMetadataHolderForPosition(position).getAccumulatedWidth();
+        anchorInfo.currentScrolledY = rowSpecifierAdapter.getMetadataHolderForPosition(position).getAccumulatedHeight();
         requestLayout();
     }
 
