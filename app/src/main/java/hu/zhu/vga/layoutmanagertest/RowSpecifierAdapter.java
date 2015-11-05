@@ -60,19 +60,6 @@ public class RowSpecifierAdapter
                     100};
     //@formatter:on
 
-    public int getRowNumber(int scrolledY) {
-        int accumulatedHeight = 0;
-        int row = 0;
-        for(int height : heightArray) {
-            if(scrolledY > accumulatedHeight && scrolledY < accumulatedHeight + height) {
-                return row;
-            } else {
-                accumulatedHeight += height;
-            }
-        }
-        return row;
-    }
-
     @Override
     public RecyclerView.ViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
         return new TestViewHolder(new TextView(parent.getContext()));
@@ -93,13 +80,6 @@ public class RowSpecifierAdapter
     @Override
     public int getItemCount() {
         return totalCount;
-    }
-
-    public int getRowCountForPosition(int position) {
-        if(!positionToRowAndAccumulatedWidthMap.containsKey(position)) {
-            initializeMetadataForPosition(position);
-        }
-        return positionToRowAndAccumulatedWidthMap.get(position).getRowCount();
     }
 
     public MetadataHolder getMetadataHolderForPosition(int position) {
