@@ -53,18 +53,82 @@ public class TestLayoutManager
 
     public void initializeVisiblePositions(RecyclerView.State state) {
         visiblePositions.clear();
-        for(int i = 0; i < state.getItemCount(); i++) {
-            if(isVisible(i)) {
-                visiblePositions.add(i);
+        ensureAnchorInfo();
+        int currentScrollY = anchorInfo.currentScrolledY;
+        int accumulatedHeight = 0;
+        int startRow = 0;
+        for(int i = 0; i < rowSpecifierAdapter.heightArray.length; i++) {
+            int currentHeight = rowSpecifierAdapter.heightArray[i];
+            if(ScreenUtils.dpToPx(accumulatedHeight + currentHeight) > currentScrollY) {
+                startRow = i;
+                break;
+            } else {
+                accumulatedHeight += currentHeight;
             }
         }
+
+        int endRow = startRow;
+        for(int i = startRow; i < rowSpecifierAdapter.heightArray.length; i++) {
+            int currentHeight = rowSpecifierAdapter.heightArray[i];
+            if(ScreenUtils.dpToPx(accumulatedHeight + currentHeight) > (currentScrollY + getHeight()) || i == rowSpecifierAdapter.heightArray.length - 1) {
+                endRow = i;
+                break;
+            } else {
+                accumulatedHeight += currentHeight;
+            }
+        }
+
+        if(startRow > 0) {
+            startRow--; //show previous row
+        }
+        for(int i = startRow; i <= endRow; i++) {
+            int currentScrollX = anchorInfo.currentScrolledX;
+            int[] widthArray = rowSpecifierAdapter.widthArrays[i];
+            int accumulatedWidth = 0;
+            int startColumn = 0;
+            for(int k = 0; k < widthArray.length; k++) {
+                int currentWidth = widthArray[k];
+                if(ScreenUtils.dpToPx(accumulatedWidth + currentWidth) > currentScrollX) {
+                    startColumn = k;
+                    break;
+                } else {
+                    accumulatedWidth += currentWidth;
+                }
+            }
+
+            int endColumn = startColumn;
+            for(int k = startColumn; k < widthArray.length; k++) {
+                int currentWidth = widthArray[k];
+                if(ScreenUtils.dpToPx(accumulatedWidth + currentWidth) > currentScrollX + getWidth() || k == widthArray.length - 1) {
+                    endColumn = k;
+                    break;
+                } else {
+                    accumulatedWidth += currentWidth;
+                }
+            }
+            if(startColumn > 0) {
+                startColumn--; //show previous column too
+            }
+            for(int column = startColumn; column <= endColumn; column++) {
+                int position = rowSpecifierAdapter.positionArrays[i][column];
+                if(isVisible(position)) {
+                    visiblePositions.add(position);
+                }
+            }
+        }
+//        for(int i = 0; i < state.getItemCount(); i++) {
+//            if(isVisible(i)) {
+//                visiblePositions.add(i);
+//            }
+//        }
     }
 
     private boolean isVisible(int position) {
         ensureAnchorInfo();
         RowSpecifierAdapter.MetadataHolder current = rowSpecifierAdapter.getMetadataHolderForPosition(position);
         int accumulatedWidth = current.getAccumulatedWidth();
-        if((ScreenUtils.dpToPx(accumulatedWidth+current.getWidth()) > anchorInfo.currentScrolledX) || (ScreenUtils.dpToPx(accumulatedWidth) >= anchorInfo.currentScrolledX && ScreenUtils.dpToPx(accumulatedWidth) < (anchorInfo.currentScrolledX + getWidth()))) { //is inside rectangle
+        if((ScreenUtils.dpToPx(accumulatedWidth + current.getWidth()) > anchorInfo.currentScrolledX) || (ScreenUtils.dpToPx(accumulatedWidth) >= anchorInfo.currentScrolledX && ScreenUtils
+                .dpToPx(accumulatedWidth) < (anchorInfo.currentScrolledX + getWidth()))) { //is inside rectangle
             return true;
         }
         return false;
@@ -92,11 +156,10 @@ public class TestLayoutManager
                 measureChildWithMargins(view, 0, 0);
 
                 RowSpecifierAdapter.MetadataHolder metadataHolder = rowSpecifierAdapter.getMetadataHolderForPosition(i);
-                view.layout(
-                        ScreenUtils.dpToPx(metadataHolder.getAccumulatedWidth()) - anchorInfo.currentScrolledX,
+                view.layout(ScreenUtils.dpToPx(metadataHolder.getAccumulatedWidth()) - anchorInfo.currentScrolledX,
                         ScreenUtils.dpToPx(metadataHolder.getAccumulatedHeight()) - anchorInfo.currentScrolledY,
-                        ScreenUtils.dpToPx(metadataHolder.getAccumulatedWidth()+metadataHolder.getWidth()) - anchorInfo.currentScrolledX,
-                        ScreenUtils.dpToPx(metadataHolder.getAccumulatedHeight()+metadataHolder.getHeight()) - anchorInfo.currentScrolledY); //assuming uniform height per row
+                        ScreenUtils.dpToPx(metadataHolder.getAccumulatedWidth() + metadataHolder.getWidth()) - anchorInfo.currentScrolledX,
+                        ScreenUtils.dpToPx(metadataHolder.getAccumulatedHeight() + metadataHolder.getHeight()) - anchorInfo.currentScrolledY); //assuming uniform height per row
             } else {
                 attachView(view);
                 viewCache.remove(i);

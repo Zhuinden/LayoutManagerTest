@@ -34,7 +34,29 @@ public class RowSpecifierAdapter
     }
 
     //@formatter:off
-    private int[][] widthArrays = new int[][]{
+    public int[][] positionArrays = new int[][] {
+            new int[]{0, 1, 2, 3, 4},
+            new int[]{5, 6, 7, 8, 9, 10, 11},
+            new int[]{12, 13, 14, 15, 16, 17, 18},
+            new int[]{19, 20, 21, 22, 23, 24},
+            new int[]{25, 26, 27, 28, 29, 30},
+            new int[]{31, 32, 33, 34, 35, 36, 37},
+            new int[]{38, 39, 40, 41, 42, 43, 44},
+            new int[]{45, 46, 47, 48, 49, 50, 51},
+            new int[]{52, 53, 54, 55, 56, 57},
+            new int[]{58, 59, 60, 61, 62, 63},
+            new int[]{64, 65, 66, 67, 68},
+            new int[]{69, 70, 71, 72, 73, 74, 75},
+            new int[]{76, 77, 78, 79, 80, 81, 82},
+            new int[]{83, 84, 85, 86, 87, 88},
+            new int[]{89, 90, 91, 92, 93, 94},
+            new int[]{95, 96, 97, 98, 99, 100, 101},
+            new int[]{102, 103, 104, 105, 106, 107, 108},
+            new int[]{109, 110, 111, 112, 113, 114, 115},
+            new int[]{116, 117, 118, 119, 120, 121},
+            new int[]{122, 123, 124, 125, 126, 127}};
+
+    public int[][] widthArrays = new int[][]{
             new int[]{200, 100, 200, 250, 250},
             new int[]{50, 100, 150, 200, 200, 200, 100},
             new int[]{250, 100, 100, 50, 100, 200, 200},
@@ -56,7 +78,7 @@ public class RowSpecifierAdapter
             new int[]{100, 100, 200, 100, 300, 200},
             new int[]{200, 100, 200, 100, 300, 100}};
 
-    private int[] heightArray =
+    public int[] heightArray =
             new int[]{
                     100,
                     100,
