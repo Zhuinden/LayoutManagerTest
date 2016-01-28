@@ -19,6 +19,21 @@ import hu.zhu.vga.layoutmanagertest.ScreenUtils;
  */
 public class SkeletonUberLayoutManager
         extends RecyclerView.LayoutManager {
+    // OPTIONAL: SCROLL LISTENING
+    public void requestScrolled() {
+        if(scrollListener != null) {
+            ensureAnchorInfo();
+            scrollListener.onScrolledTo(anchorInfo.currentScrolledX, anchorInfo.currentScrolledY);
+        }
+    }
+
+    public interface ScrollListener {
+        void onScrolledTo(int currentScrollX, int currentScrollY);
+    }
+
+    private ScrollListener scrollListener = null;
+    //
+
     private SkeletonUberAdapter rowSpecifierAdapter;
 
     public SkeletonUberLayoutManager(SkeletonUberAdapter rowSpecifierAdapter) {
@@ -122,20 +137,22 @@ public class SkeletonUberLayoutManager
 
     // SCROLLING
 
+
     @Override
     public boolean canScrollVertically() {
-        return true;
+        return !rowSpecifierAdapter.isLoading();
     }
 
     @Override
     public boolean canScrollHorizontally() {
-        return true;
+        return !rowSpecifierAdapter.isLoading();
     }
 
     @Override
     public int scrollVerticallyBy(int dy, RecyclerView.Recycler recycler, RecyclerView.State state) {
-        if(state.getItemCount() > 0) {
+        if(state.getItemCount() > 0 && !rowSpecifierAdapter.isLoading()) {
             int delta = scrollVerticallyInternal(dy, state);
+            requestScrolled();
             offsetChildrenVertical(-delta);
             fill(recycler, state);
             return delta;
@@ -143,6 +160,7 @@ public class SkeletonUberLayoutManager
             return 0;
         }
     }
+
 
     private int scrollVerticallyInternal(int dy, RecyclerView.State state) {
         int childCount = getChildCount();
@@ -190,6 +208,7 @@ public class SkeletonUberLayoutManager
     public int scrollHorizontallyBy(int dx, RecyclerView.Recycler recycler, RecyclerView.State state) {
         if(state.getItemCount() > 0) {
             int delta = scrollHorizontallyInternal(dx, state);
+            requestScrolled();
             offsetChildrenHorizontal(-delta);
             fill(recycler, state);
             return delta;
