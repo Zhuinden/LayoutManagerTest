@@ -251,19 +251,19 @@ public class SkeletonUberLayoutManager
         int currentScrollY = anchorInfo.currentScrolledY;
 
         //START: FIND WINDOW IN WHICH VIEWS ARE VISIBLE
-        int accumulatedHeight = 0;
+        double accumulatedHeight = 0;
         int startRow = 0;
 
         // START http://stackoverflow.com/a/33264687/2413303
-        int n = rowSpecifierAdapter.metadataHolderArrays.size();
+        int n = rowSpecifierAdapter.getRowCount();
         int first = 0;
         int last = n - 1;
         int middle = (first + last) / 2;
         int search = currentScrollY;
         while(first <= last) {
-            if(ScreenUtils.dpToPx(rowSpecifierAdapter.metadataHolderArrays.get(middle).get(0).getAccumulatedHeight()) < search) {
+            if(ScreenUtils.dpToPx(rowSpecifierAdapter.getMetadataForRowAndColumn(middle, 0).getAccumulatedHeight()) < search) {
                 first = middle + 1;
-            } else if(ScreenUtils.dpToPx(rowSpecifierAdapter.metadataHolderArrays.get(middle).get(0).getAccumulatedHeight()) == search) {
+            } else if(ScreenUtils.dpToPx(rowSpecifierAdapter.getMetadataForRowAndColumn(middle, 0).getAccumulatedHeight()) == search) {
                 break;
             } else {
                 last = middle - 1;
@@ -272,15 +272,14 @@ public class SkeletonUberLayoutManager
         }
         // END http://stackoverflow.com/a/33264687/2413303
         startRow = middle;
-        accumulatedHeight = rowSpecifierAdapter.metadataHolderArrays.get(middle).get(0).getAccumulatedHeight();
+        accumulatedHeight = rowSpecifierAdapter.getMetadataForRowAndColumn(middle, 0).getAccumulatedHeight();
 
         int endRow = startRow;
-        for(int i = startRow; i < rowSpecifierAdapter.metadataHolderArrays.size(); i++) {
-            int currentHeight = rowSpecifierAdapter.metadataHolderArrays.get(i).get(0).getHeight();
-            if(ScreenUtils.dpToPx(accumulatedHeight + currentHeight) > (currentScrollY + getHeight()) || i == rowSpecifierAdapter.metadataHolderArrays
-                    .size() - 1) {
+        for(int i = startRow; i < n; i++) {
+            double currentHeight = rowSpecifierAdapter.getMetadataForRowAndColumn(i, 0).getHeight();
+            if(ScreenUtils.dpToPx(accumulatedHeight + currentHeight) > (currentScrollY + getHeight()) || i == n - 1) {
                 endRow = i;
-                if(endRow != rowSpecifierAdapter.metadataHolderArrays.size() - 1) {
+                if(endRow != n - 1) {
                     endRow++;
                 }
                 break;
@@ -295,20 +294,20 @@ public class SkeletonUberLayoutManager
 
         for(int i = startRow; i <= endRow; i++) {
             int currentScrollX = anchorInfo.currentScrolledX;
-            List<SkeletonUberAdapter.MetadataHolder> widthArray = rowSpecifierAdapter.metadataHolderArrays.get(i);
-            int accumulatedWidth = 0;
+            //List<MetadataHolder> widthArray = rowSpecifierAdapter.metadataHolderArrays.get(i);
+            double accumulatedWidth = 0;
             int startColumn = 0;
 
             // START http://stackoverflow.com/a/33264687/2413303
-            n = widthArray.size();
+            n = rowSpecifierAdapter.getColumnCountForRow(i);
             first = 0;
             last = n - 1;
             middle = (first + last) / 2;
             search = currentScrollX;
             while(first <= last) {
-                if(ScreenUtils.dpToPx(widthArray.get(middle).getAccumulatedWidth()) < search) {
+                if(ScreenUtils.dpToPx(rowSpecifierAdapter.getMetadataForRowAndColumn(i, middle).getAccumulatedWidth()) < search) {
                     first = middle + 1;
-                } else if(ScreenUtils.dpToPx(widthArray.get(middle).getAccumulatedWidth()) == search) {
+                } else if(ScreenUtils.dpToPx(rowSpecifierAdapter.getMetadataForRowAndColumn(i, middle).getAccumulatedWidth()) == search) {
                     break;
                 } else {
                     last = middle - 1;
@@ -317,14 +316,14 @@ public class SkeletonUberLayoutManager
             }
             // END http://stackoverflow.com/a/33264687/2413303
             startColumn = middle;
-            accumulatedWidth = widthArray.get(middle).getAccumulatedWidth();
+            accumulatedWidth = rowSpecifierAdapter.getMetadataForRowAndColumn(i, middle).getAccumulatedWidth();
 
             int endColumn = startColumn;
-            for(int k = startColumn; k < widthArray.size(); k++) {
-                int currentWidth = widthArray.get(k).getWidth();
-                if(ScreenUtils.dpToPx(accumulatedWidth + currentWidth) > currentScrollX + getWidth() || k == widthArray.size() - 1) {
+            for(int k = startColumn; k < n; k++) {
+                double currentWidth = rowSpecifierAdapter.getMetadataForRowAndColumn(i, k).getWidth();
+                if(ScreenUtils.dpToPx(accumulatedWidth + currentWidth) > currentScrollX + getWidth() || k == n - 1) {
                     endColumn = k;
-                    if(endColumn != widthArray.size() - 1) {
+                    if(endColumn != n - 1) {
                         endColumn++;
                     }
                     break;
@@ -337,7 +336,7 @@ public class SkeletonUberLayoutManager
             }
 
             for(int column = startColumn; column <= endColumn; column++) {
-                int position = rowSpecifierAdapter.metadataHolderArrays.get(i).get(column).getPosition();
+                int position = rowSpecifierAdapter.getMetadataForRowAndColumn(i, column).getPosition();
                 if(isVisible(position)) {
                     visiblePositions.add(position);
                 }
@@ -345,66 +344,21 @@ public class SkeletonUberLayoutManager
         }
         //END: FIND WINDOWS IN WHICH VIEWS ARE VISIBLE
 
-        if(!(rowSpecifierAdapter.metadataHolderArrays.get(0)
-                .get(0)
-                .isHorizontalScrollable() && rowSpecifierAdapter.metadataHolderArrays.get(0).get(0).isVerticalScrollable())) {
-            staticPositions.add(rowSpecifierAdapter.metadataHolderArrays.get(0).get(0).getPosition()); // loading indicator
+        if(!(rowSpecifierAdapter.getMetadataForRowAndColumn(0, 0)
+                .isHorizontalScrollable() && rowSpecifierAdapter.getMetadataForRowAndColumn(0, 0).isVerticalScrollable())) {
+            staticPositions.add(rowSpecifierAdapter.getMetadataForRowAndColumn(0, 0).getPosition()); // loading indicator
         }
 
         // START http://stackoverflow.com/a/33264687/2413303
-        n = rowSpecifierAdapter.metadataHolderArrays.get(0).size();
-        first = 0;
-        last = n - 1;
-        middle = (first + last) / 2;
-        search = anchorInfo.currentScrolledX;
-        while(first <= last) {
-            if(ScreenUtils.dpToPx(rowSpecifierAdapter.metadataHolderArrays.get(0).get(middle).getAccumulatedWidth()) < search) {
-                first = middle + 1;
-            } else if(ScreenUtils.dpToPx(rowSpecifierAdapter.metadataHolderArrays.get(0).get(middle).getAccumulatedWidth()) == search) {
-                break;
-            } else {
-                last = middle - 1;
-            }
-            middle = (first + last) / 2;
-        }
-        // END http://stackoverflow.com/a/33264687/2413303
-        int startColumn = middle;
-        int accumulatedWidth = rowSpecifierAdapter.metadataHolderArrays.get(0).get(middle).getAccumulatedWidth();
-
-        int endColumn = startColumn;
-        for(int i = startColumn; i < rowSpecifierAdapter.metadataHolderArrays.get(0).size(); i++) {
-            int currentWidth = rowSpecifierAdapter.metadataHolderArrays.get(0).get(i).getWidth();
-            if(ScreenUtils.dpToPx(accumulatedWidth + currentWidth) > (anchorInfo.currentScrolledX + getWidth()) || i == rowSpecifierAdapter.metadataHolderArrays
-                    .get(0)
-                    .size() - 1) {
-                endColumn = i;
-                if(endColumn != rowSpecifierAdapter.metadataHolderArrays.get(0).size() - 1) {
-                    endColumn++;
-                }
-                break;
-            } else {
-                accumulatedWidth += currentWidth;
-            }
-        }
-
-        if(startColumn > 0) {
-            startColumn--; //show previous row
-        }
-
-        for(int i = startColumn; i <= endColumn; i++) {
-            staticPositions.add(rowSpecifierAdapter.metadataHolderArrays.get(0).get(i).getPosition());
-        }
-
-        // START http://stackoverflow.com/a/33264687/2413303
-        n = rowSpecifierAdapter.metadataHolderArrays.size();
+        n = rowSpecifierAdapter.getRowCount();
         first = 0;
         last = n - 1;
         middle = (first + last) / 2;
         search = anchorInfo.currentScrolledY;
         while(first <= last) {
-            if(ScreenUtils.dpToPx(rowSpecifierAdapter.metadataHolderArrays.get(middle).get(0).getAccumulatedHeight()) < search) {
+            if(ScreenUtils.dpToPx(rowSpecifierAdapter.getMetadataForRowAndColumn(middle, 0).getAccumulatedHeight()) < search) {
                 first = middle + 1;
-            } else if(ScreenUtils.dpToPx(rowSpecifierAdapter.metadataHolderArrays.get(middle).get(0).getAccumulatedHeight()) == search) {
+            } else if(ScreenUtils.dpToPx(rowSpecifierAdapter.getMetadataForRowAndColumn(middle, 0).getAccumulatedHeight()) == search) {
                 break;
             } else {
                 last = middle - 1;
@@ -413,15 +367,15 @@ public class SkeletonUberLayoutManager
         }
         // END http://stackoverflow.com/a/33264687/2413303
         startRow = middle;
-        accumulatedHeight = rowSpecifierAdapter.metadataHolderArrays.get(middle).get(0).getAccumulatedHeight();
+        accumulatedHeight = rowSpecifierAdapter.getMetadataForRowAndColumn(middle, 0).getAccumulatedHeight();
 
         endRow = startRow;
-        for(int i = startRow; i < rowSpecifierAdapter.metadataHolderArrays.size(); i++) {
-            int currentHeight = rowSpecifierAdapter.metadataHolderArrays.get(i).get(0).getHeight();
-            if(ScreenUtils.dpToPx(accumulatedHeight + currentHeight) >= (anchorInfo.currentScrolledY + getHeight()) || i == rowSpecifierAdapter.metadataHolderArrays
-                    .size() - 1) {
+        for(int i = startRow; i < rowSpecifierAdapter.getRowCount(); i++) {
+            double currentHeight = rowSpecifierAdapter.getMetadataForRowAndColumn(i, 0).getHeight();
+            if(ScreenUtils.dpToPx(accumulatedHeight + currentHeight) >= (anchorInfo.currentScrolledY + getHeight()) || i == rowSpecifierAdapter
+                    .getRowCount() - 1) {
                 endRow = i;
-                if(endRow != rowSpecifierAdapter.metadataHolderArrays.size() - 1) {
+                if(endRow != rowSpecifierAdapter.getRowCount() - 1) {
                     endRow++;
                 }
                 break;
@@ -435,7 +389,49 @@ public class SkeletonUberLayoutManager
         }
 
         for(int i = startRow; i <= endRow; i++) {
-            staticPositions.add(rowSpecifierAdapter.metadataHolderArrays.get(i).get(0).getPosition());
+            staticPositions.add(rowSpecifierAdapter.getMetadataForRowAndColumn(i, 0).getPosition());
+        }
+
+        // START http://stackoverflow.com/a/33264687/2413303
+        n = rowSpecifierAdapter.getColumnCountForRow(0);
+        first = 0;
+        last = n - 1;
+        middle = (first + last) / 2;
+        search = anchorInfo.currentScrolledX;
+        while(first <= last) {
+            if(ScreenUtils.dpToPx(rowSpecifierAdapter.getMetadataForRowAndColumn(0, middle).getAccumulatedWidth()) < search) {
+                first = middle + 1;
+            } else if(ScreenUtils.dpToPx(rowSpecifierAdapter.getMetadataForRowAndColumn(0, middle).getAccumulatedWidth()) == search) {
+                break;
+            } else {
+                last = middle - 1;
+            }
+            middle = (first + last) / 2;
+        }
+        // END http://stackoverflow.com/a/33264687/2413303
+        int startColumn = middle;
+        double accumulatedWidth = rowSpecifierAdapter.getMetadataForRowAndColumn(0, middle).getAccumulatedWidth();
+
+        int endColumn = startColumn;
+        for(int i = startColumn; i < n; i++) {
+            double currentWidth = rowSpecifierAdapter.getMetadataForRowAndColumn(0, i).getWidth();
+            if(ScreenUtils.dpToPx(accumulatedWidth + currentWidth) > (anchorInfo.currentScrolledX + getWidth()) || i == n - 1) {
+                endColumn = i;
+                if(endColumn != n - 1) {
+                    endColumn++;
+                }
+                break;
+            } else {
+                accumulatedWidth += currentWidth;
+            }
+        }
+
+        if(startColumn > 0) {
+            startColumn--; //show previous row
+        }
+
+        for(int i = startColumn; i <= endColumn; i++) {
+            staticPositions.add(rowSpecifierAdapter.getMetadataForRowAndColumn(0, i).getPosition());
         }
 
         for(Integer i : staticPositions) {

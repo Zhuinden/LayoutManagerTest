@@ -1,6 +1,8 @@
 package hu.zhu.vga.layoutmanagertest.newskeleton;
 
 
+import android.os.Handler;
+import android.os.Looper;
 import android.support.v7.widget.RecyclerView;
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -62,28 +64,46 @@ public class SkeletonUberAdapter
         return metadataHolder;
     }
 
+    private MetadataHolder loadingHolder = null;
+    private Handler handler = new Handler(Looper.getMainLooper());
+    private LoadingListener loadingListener = null;
+
     private void initForLoading() {
         valid = false;
 
         positionToMetadataMap = new HashMap<>();
         metadataHolderArrays = new ArrayList<>();
-        MetadataHolder metadataHolder = createNewMetadataHolder(0,
-                ScreenUtils.dpToPx(60),
-                ScreenUtils.dpToPx(60),
-                0,
-                0,
-                0,
-                0,
-                false,
-                false);
-        positionToMetadataMap.put(0, metadataHolder);
+        if(loadingHolder == null) {
+            loadingHolder = createNewMetadataHolder(
+                    0,
+                    ScreenUtils.dpToPx(60),
+                    ScreenUtils.dpToPx(60),
+                    0,
+                    0,
+                    0,
+                    0,
+                    false,
+                    false);
+        }
+        positionToMetadataMap.put(0, loadingHolder);
         List<MetadataHolder> metadataHolders = new ArrayList<>(1);
-        metadataHolders.add(metadataHolder);
+        metadataHolders.add(loadingHolder);
+
         metadataHolderArrays.add(metadataHolders);
         totalCount = 1;
         initialized = true;
-        notifyDataSetChanged();
+        handler.post(notifyDataset);
     }
+
+    private final Runnable notifyDataset = new Runnable() {
+        @Override
+        public void run() {
+            if(loadingListener != null) {
+                loadingListener.notifyIsLoading(isLoading());
+            }
+            notifyDataSetChanged();
+        }
+    };
 
     public void setDatastructures() {
         initForLoading();
@@ -160,6 +180,49 @@ public class SkeletonUberAdapter
 
     public boolean isStatic(int position) {
         return false;
+    }
+
+
+    public int getRowCount() {
+        if(isLoading()) {
+            return 1;
+        } else {
+            return metadataHolderArrays.size();
+        }
+    }
+
+    public int getColumnCountForRow(int row) {
+        if(isLoading()) {
+            return 1;
+        } else {
+            return metadataHolderArrays.get(row).size();
+        }
+    }
+
+    public List<MetadataHolder> getMetadataInRow(int row) {
+        if(isLoading()) {
+            ArrayList<MetadataHolder> arrayList = new ArrayList<>();
+            arrayList.add(loadingHolder);
+            return arrayList;
+        } else {
+            return metadataHolderArrays.get(row);
+        }
+    }
+
+    public MetadataHolder getMetadataForRowAndColumn(int row, int column) {
+        if(isLoading()) {
+            return loadingHolder;
+        } else {
+            return metadataHolderArrays.get(row).get(column);
+        }
+    }
+
+    public boolean isLoading() {
+        return !valid;
+    }
+
+    public interface LoadingListener {
+        void notifyIsLoading(boolean isLoading);
     }
 
     public static class MetadataHolder {
